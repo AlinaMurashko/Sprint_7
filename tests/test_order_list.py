@@ -1,28 +1,35 @@
 import allure
 import pytest
 import requests
-from conftest import BASE_URL
+from data import OrderData, StatusCodes
+from urls import ApiUrls
 
 @allure.feature("Список заказов")
 class TestOrderList:
     @allure.title("Получение списка заказов")
     def test_get_order_list(self):
-        response = requests.get(f'{BASE_URL}/api/v1/orders')
+        with allure.step("Отправить запрос на получение списка заказов"):
+            response = requests.get(ApiUrls.ORDER_LIST)
 
-        assert response.status_code == 200
-        response_data = response.json()
+        with allure.step("Проверить код ответа"):
+            assert response.status_code == StatusCodes.OK
 
-        assert "orders" in response_data
-        assert isinstance(response_data["orders"], list)
+        with allure.step("Проверить структуру ответа"):
+            response_data = response.json()
+            assert "orders" in response_data
+            assert isinstance(response_data["orders"], list)
 
-    @pytest.mark.parametrize("limit", [1, 5, 10, 15])
+    @pytest.mark.parametrize("limit", OrderData.LIMIT_VARIANTS)
     @allure.title("Получение списка заказов с разными лимитами")
     def test_get_order_list_with_different_limits(self, limit):
-        response = requests.get(f'{BASE_URL}/api/v1/orders', params={"limit": limit})
+        with allure.step(f"Отправить запрос на получение списка заказов с лимитом {limit}"):
+            response = requests.get(ApiUrls.ORDER_LIST, params={"limit": limit})
 
-        assert response.status_code == 200
-        response_data = response.json()
+        with allure.step("Проверить код ответа"):
+            assert response.status_code == StatusCodes.OK
 
-        assert "orders" in response_data
-        assert isinstance(response_data["orders"], list)
-        assert len(response_data["orders"]) <= limit
+        with allure.step("Проверить количество полученных заказов"):
+            response_data = response.json()
+            assert "orders" in response_data
+            assert isinstance(response_data["orders"], list)
+            assert len(response_data["orders"]) <= limit
